@@ -4,8 +4,8 @@ const { signUpUser, signInUser, getMyInformation } = require("../services/userSe
 
 const userRouter = express.Router();
 
-userRouter.get("/me", getMyInformation);
 userRouter.post("/sign-up", signUpUser);
 userRouter.post("/sign-in", signInUser);
+userRouter.get("/me", getMyInformation);
 
 module.exports = userRouter;

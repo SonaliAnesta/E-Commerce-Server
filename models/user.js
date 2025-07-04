@@ -1,4 +1,5 @@
 const connection = require("../db");
+const { userRoles } = require("../utils/constants");
 
 const userSchema = new connection.Schema(
   {
@@ -15,6 +16,11 @@ const userSchema = new connection.Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      enum: [userRoles.ADMIN, userRoles.CUSTOMER],
+      default: userRoles.CUSTOMER,
+    }
   },
   { timestamps: true }
 );

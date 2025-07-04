@@ -8,6 +8,12 @@ const httpStatus = {
   SERVER_ERROR: 500,
 };
 
+const userRoles = {
+  ADMIN: "admin",
+  CUSTOMER: "customer",
+};
+
 module.exports = {
   httpStatus,
+  userRoles,
 };

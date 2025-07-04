@@ -1,51 +1,8 @@
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
-
 const User = require("../models/user");
 
 const { formatSuccessResponse, formatErrorResponse } = require("../utils/api");
-const { httpStatus } = require("../utils/constants");
-
-// Password hashing utils
-const hashPassword = (password) => {
-  if (!password) {
-    return null;
-  }
-  const hash = crypto.createHash("sha256").update(password).digest("hex");
-  return hash;
-};
-// Password hashing utils end
-
-// JWT utils
-const generateTokenPairForUser = (user) => {
-  const accessToken = jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      // Expires in 1 hour
-      expiresIn: "1h",
-    }
-  );
-  const refreshToken = jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      // Expires in 1 hour
-      expiresIn: "3d",
-    }
-  );
-  return { accessToken, refreshToken };
-};
-
-const verifyAccessToken = (token) => {
-  return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-};
-
-// JWT utils end
+const { hashPassword, verifyAccessToken, generateTokenPairForUser } = require("../utils/auth");
+const { httpStatus, userRoles } = require("../utils/constants");
 
 const signUpUser = async (req, res) => {
   try {
@@ -78,6 +35,7 @@ const signUpUser = async (req, res) => {
     const passwordHashedUser = {
       ...userRequest,
       password: hashPassword(userRequest.password),
+      role: userRoles.CUSTOMER,
     };
     const user = new User(passwordHashedUser);
 
@@ -146,7 +104,10 @@ const signInUser = async (req, res) => {
     // Generate token pair
     const tokens = generateTokenPairForUser(matchedUser);
 
-    const { status, result } = formatSuccessResponse(tokens);
+    const { status, result } = formatSuccessResponse({
+      ...tokens,
+      isAdmin: matchedUser.role === userRoles.ADMIN,
+    });
     res.status(status).json(result);
     return;
   } catch (err) {
@@ -187,14 +148,14 @@ const getMyInformation = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-      }
+      };
       const { status, result } = formatSuccessResponse(responseData);
       res.status(status).json(result);
       return;
     }
     const { status, message, error } = formatErrorResponse(
       "Unable to resolve user information.",
-      'USER_DATA_NOT_FOUND',
+      "USER_DATA_NOT_FOUND",
       httpStatus.NOT_FOUND
     );
     res.status(status).send({ message, error });
