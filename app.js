@@ -14,7 +14,12 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-app.use(cors());
+const origins = process.env.ALLOWED_ORIGINS;
+
+if (origins) {
+  const allowedOrigins = origins.split(",");
+  app.use(cors({ origin: allowedOrigins }));
+}
 app.use(express.json());
 
 // Routes binding with the app
